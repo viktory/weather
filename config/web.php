@@ -2,6 +2,10 @@
 
 $params = require(__DIR__ . '/params.php');
 
+$params = require(__DIR__ . '/params.php');
+$token = $params['token'];
+unset($params['token']);
+
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
@@ -47,6 +51,11 @@ $config = [
             ],
         ],
         */
+        'bot' => [
+            'class' => 'app\components\telegrambot\Api',
+            'accessToken' => $token,
+            'commandPath' => '@app/components/commands'
+        ],
     ],
     'params' => $params,
 ];

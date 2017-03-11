@@ -10,12 +10,19 @@
 
 namespace app\controllers;
 
+use app\components\telegrambot\Api;
 use yii\rest\Controller;
 
 class WeatherController extends Controller
 {
+    /**
+     * @var Api
+     */
+    protected $_weatherBot;
+
     public function actionIndex()
     {
-        die('dd');
+        $this->_weatherBot = \Yii::$app->bot;
+        $this->_weatherBot->commandsHandler();
     }
 }
