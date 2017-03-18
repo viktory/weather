@@ -1,7 +1,4 @@
 <?php
-
-$params = require(__DIR__ . '/params.php');
-
 $params = require(__DIR__ . '/params.php');
 $token = $params['token'];
 unset($params['token']);
@@ -24,7 +21,9 @@ $config = [
             'enableAutoLogin' => true,
         ],
         'errorHandler' => [
-            'errorAction' => 'site/error',
+            'class' => 'ApiErrorHandler\ApiErrorHandler',
+            'filename' => '../logs/weather_bot_error.log',
+            'errorAction' => 'weather/error'
         ],
         'mailer' => [
             'class' => 'yii\swiftmailer\Mailer',
@@ -55,6 +54,15 @@ $config = [
             'class' => 'app\components\telegrambot\Api',
             'accessToken' => $token,
             'commandPath' => '@app/components/commands'
+        ],
+        'urlManager' => [
+            'enablePrettyUrl' => true,
+            'showScriptName' => false,
+            'rules' => [
+                '<controller:\w+>/<id:\d+>'              => '<controller>/view',
+                '<controller:\w+>/<action:\w+>/<id:\d+>' => '<controller>/<action>',
+                '<controller:\w+>/<action:\w+>'          => '<controller>/<action>',
+            ]
         ],
     ],
     'params' => $params,

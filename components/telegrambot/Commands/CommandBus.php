@@ -158,7 +158,7 @@ class CommandBus
 //            }
         }
 
-        $this->execute($command, $arguments, $update);
+        $this->telegram->lastExecuteStatus = $this->execute($command, $arguments, $update);
         return $update;
     }
 

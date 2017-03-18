@@ -199,7 +199,7 @@ abstract class AbstractCommand implements CommandInterface
         $action = substr($method, 0, 9);
         if ($action === 'replyWith') {
             $reply_name = substr($method, 9);
-            $methodName = 'send'.$reply_name;
+            $methodName = 'send' . $reply_name;
 
             if (!method_exists($this->telegram, $methodName)) {
                 return 'Method Not Found';

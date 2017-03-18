@@ -13,13 +13,20 @@
         "source": "https://github.com/yiisoft/yii2"
     },
     "minimum-stability": "stable",
+    "repositories": [
+        {
+            "url": "https://github.com/viktory/api-error-handler.git",
+            "type": "git"
+        }
+    ],
     "require": {
         "php": ">=5.4.0",
         "yiisoft/yii2": "~2.0.5",
         "yiisoft/yii2-bootstrap": "~2.0.0",
         "yiisoft/yii2-swiftmailer": "~2.0.0",
         "illuminate/support": "^5.4",
-        "guzzlehttp/guzzle": "^6.2"
+        "guzzlehttp/guzzle": "^6.2",
+        "viktory/api-error-handler": "dev-master"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",

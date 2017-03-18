@@ -44,6 +44,9 @@ class Api extends Component
     /** @var string */
     public $commandPath = null;
 
+    /** @var bool|null */
+    public $lastExecuteStatus = null;
+
     /** @var TelegramClient The Telegram client service. */
     protected $client;
 
@@ -183,7 +186,7 @@ class Api extends Component
     /**
      * @return Update
      */
-    protected function getWebhookUpdates()
+    public function getWebhookUpdates()
     {
         if ($this->_update === null) {
             $body = json_decode(file_get_contents('php://input'), true);
@@ -193,8 +196,8 @@ class Api extends Component
     }
 
     /**
-     * Check update object for a command and process.
-     * @param Update $update
+     * @param \app\components\telegrambot\Objects\Update $update
+     * @return \app\components\telegrambot\Objects\Update
      */
     protected function processCommand(Update $update)
     {
@@ -209,7 +212,7 @@ class Api extends Component
 //            }
         }
 
-        $this->getCommandBus()->handler($command, $update);
+        return $this->getCommandBus()->handler($command, $update);
     }
 
     /**

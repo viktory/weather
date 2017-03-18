@@ -14,7 +14,7 @@ use app\components\telegrambot\HttpClients\HttpClientInterface;
  */
 class TelegramClient
 {
-    /** @const string Telegram Bot API URL. /
+    /** @const string Telegram Bot API URL. */
     const BASE_BOT_URL = 'https://api.telegram.org/bot';
 
     /** @const int The timeout in seconds for a request that contains file uploads. */
