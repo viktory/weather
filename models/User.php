@@ -2,69 +2,63 @@
 
 namespace app\models;
 
-class User extends \yii\base\Object implements \yii\web\IdentityInterface
+use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveRecord;
+use yii\db\Exception;
+use yii\db\Expression;
+use app\components\telegrambot\Objects\User as TelegramUser;
+
+/**
+ * User model
+ *
+ * @property integer $id
+ * @property integer $user_id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $city
+ * @property double $lat
+ * @property double $lng
+ * @property integer $created
+ */
+class User extends ActiveRecord
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
-
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
-
-
     /**
      * @inheritdoc
      */
-    public static function findIdentity($id)
+    public static function tableName()
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return 'users';
     }
 
     /**
      * @inheritdoc
      */
-    public static function findIdentityByAccessToken($token, $type = null)
+    public function behaviors()
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created',
+                'updatedAtAttribute' => false,
+                'value' => new Expression('NOW()'),
+            ]
+        ];
     }
 
     /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
+     * @inheritdoc
      */
-    public static function findByUsername($username)
+    public function rules()
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return [
+            [['user_id', 'first_name', 'last_name'], 'filter', 'filter' => 'trim'],
+            [['user_id', 'first_name'], 'required'],
+            [['user_id'], 'integer'],
+            [['user_id'], 'unique'],
+            [['first_name', 'last_name'], 'string', 'length' => [1, 255]],
+//            [['last_cities'], 'string'],
+//            [['lat', 'lng'], 'double'],
+        ];
     }
 
     /**
@@ -72,33 +66,35 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function getId()
     {
-        return $this->id;
+        return $this->getPrimaryKey();
     }
 
     /**
-     * @inheritdoc
+     * @param \app\components\telegrambot\Objects\User $from
+     * @return User
+     * @throws \Exception
      */
-    public function getAuthKey()
+    public static function getUser(TelegramUser $from)
     {
-        return $this->authKey;
-    }
+        if (empty($from)) {
+            throw new \InvalidArgumentException('Sender is empty');
+        }
+        $user = self::findOne(['user_id' => $from->getId()]);
 
-    /**
-     * @inheritdoc
-     */
-    public function validateAuthKey($authKey)
-    {
-        return $this->authKey === $authKey;
-    }
+        if (empty($user)) {
+            $user = new User();
+            $user->user_id = $from->getId();
+            $user->first_name = $from->getFirstName();
+            $user->last_name = $from->getLastName();
+            if ($user->validate()) {
+                $user->save();
+            } else {
+                $errorMessages = json_encode($user->getErrors());
+                $message = "Can not create new user with user_id={$from->getId()} and first_name={$from->getFirstName()} ({$errorMessages})";
+                throw new Exception($message);
+            }
+        }
 
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
-    public function validatePassword($password)
-    {
-        return $this->password === $password;
+        return $user;
     }
 }

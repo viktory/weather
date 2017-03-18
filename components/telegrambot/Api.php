@@ -18,6 +18,7 @@ use app\components\telegrambot\Exceptions\TelegramSDKException;
 use app\components\telegrambot\HttpClients\GuzzleHttpClient;
 use app\components\telegrambot\HttpClients\HttpClientInterface;
 use app\components\telegrambot\Objects\Update;
+use app\models\User;
 use Illuminate\Contracts\Container\Container;
 use yii\base\Component;
 
@@ -32,12 +33,6 @@ class Api extends Component
     /** @var null|string|HttpClientInterface (Optional) Custom HTTP Client Handler. */
     public $httpClientHandler = null;
 
-    /** @var Update */
-    private $_update = null;
-
-    /** @var CommandBus|null Telegram Command Bus. */
-    protected $commandBus = null;
-
     /** @var string Telegram Bot API Access Token. */
     public $accessToken = null;
 
@@ -47,8 +42,14 @@ class Api extends Component
     /** @var bool|null */
     public $lastExecuteStatus = null;
 
+    /** @var CommandBus|null Telegram Command Bus. */
+    protected $commandBus = null;
+
     /** @var TelegramClient The Telegram client service. */
     protected $client;
+
+    /** @var  User */
+    protected $user;
 
     /** @var bool Indicates if the request to Telegram will be asynchronous (non-blocking). */
     protected $isAsyncRequest = false;
@@ -67,6 +68,9 @@ class Api extends Component
 
     /** @var Container IoC Container */
     protected static $container = null;
+
+    /** @var Update */
+    private $_update = null;
 
     /**
      * Instantiates a new Telegram super-class object.
@@ -192,7 +196,13 @@ class Api extends Component
             $body = json_decode(file_get_contents('php://input'), true);
             $this->_update = new Update($body);
         }
+        $this->afterGetWebhookUpdates();
         return $this->_update;
+    }
+
+    protected function afterGetWebhookUpdates()
+    {
+        $this->user = User::getUser($this->_update->getMessage()->getFrom());
     }
 
     /**
