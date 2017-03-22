@@ -26,6 +26,7 @@ use app\components\telegrambot\Objects\Update;
  */
 abstract class AbstractCommand implements CommandInterface
 {
+    const COMMAND = 'Command';
     //todo move constants to somewhere else. avoid to create command as '/'.constant
     const COMMAND_ERROR = 'error';
 //    const COMMAND_START = 'start';
@@ -39,34 +40,31 @@ abstract class AbstractCommand implements CommandInterface
      */
     protected $name;
 
-    /**
-     * @var string The Telegram command description.
-     */
+    /** @var string The Telegram command description. */
     protected $description;
 
-    /**
-     * @var Api Holds the Super Class Instance.
-     */
+    /**  @var Api Holds the Super Class Instance. */
     protected $telegram;
 
-    /**
-     * @var string Arguments passed to the command.
-     */
+    /** @var string Arguments passed to the command. */
     protected $arguments;
 
-    /**
-     * @var Update Holds an Update object.
-     */
+    /** @var Update Holds an Update object. */
     protected $update;
 
     /**
      * AbstractCommand constructor.
      * @throws \app\components\telegrambot\Exceptions\TelegramSDKException
      */
-    public final function __construct()
+    public function __construct()
     {
         if (!isset($this->name)) {
-            throw new TelegramSDKException(get_class($this) . ' must have a $name');
+            $reflect = new \ReflectionClass($this);
+            $className = $reflect->getShortName();
+            if (substr($className, -7) !== self::COMMAND) {
+                throw new TelegramSDKException(get_class($this) . ' must have a $name');
+            }
+            $this->name = lcfirst(rtrim($className, self::COMMAND));
         }
     }
 
@@ -122,6 +120,14 @@ abstract class AbstractCommand implements CommandInterface
     }
 
     /**
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->description;
+    }
+
+    /**
      * Returns Telegram Instance.
      * @return Api
      */
@@ -146,6 +152,22 @@ abstract class AbstractCommand implements CommandInterface
     public function getArguments()
     {
         return $this->arguments;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserName()
+    {
+        return $this->telegram->getUser()->first_name;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getErrorCommand()
+    {
+        return '/' . self::COMMAND_ERROR;
     }
 
     /**
@@ -205,7 +227,7 @@ abstract class AbstractCommand implements CommandInterface
                 return 'Method Not Found';
             }
 
-            $chat_id = $this->update->getMessage()->getChat()->getId();
+            $chat_id = $this->update->getChatId();
             $params = array_merge(compact('chat_id'), $arguments[0], []);
 
             return call_user_func_array([$this->telegram, $methodName], [$params]);

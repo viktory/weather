@@ -22,7 +22,7 @@ $config = [
         ],
         'errorHandler' => [
             'class' => 'ApiErrorHandler\ApiErrorHandler',
-            'filename' => '../logs/weather_bot_error.log',
+            'filename' => __DIR__ . '/../logs/weather_bot_error.log',
             'errorAction' => 'weather/error'
         ],
         'mailer' => [

@@ -51,7 +51,7 @@ class WeatherController extends Controller
     {
         $errorText = 'Oops, there was an error inside of me. But I am already being fixed. Please write me later.';
         $lastUpdate = $this->weatherBot->getWebhookUpdates();
-        $chat_id = $lastUpdate->getMessage()->getChat()->getId();
+        $chat_id = $lastUpdate->getChatId();
         $lastMessage = $this->weatherBot->sendMessage([
             'text' => $errorText,
             'chat_id' => $chat_id

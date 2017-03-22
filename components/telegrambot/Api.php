@@ -188,6 +188,14 @@ class Api extends Component
     }
 
     /**
+     * @return \app\models\User
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
      * @return Update
      */
     public function getWebhookUpdates()
@@ -202,27 +210,38 @@ class Api extends Component
 
     protected function afterGetWebhookUpdates()
     {
-        $this->user = User::getUser($this->_update->getMessage()->getFrom());
+        if (isset($this->_update)) {
+            $message = $this->_update->getMessage();
+            if (isset($message)) {
+                $this->user = User::getUser($this->_update->getMessage()->getFrom());
+            }
+        }
     }
 
     /**
      * @param \app\components\telegrambot\Objects\Update $update
-     * @return \app\components\telegrambot\Objects\Update
+     * @return \app\components\telegrambot\Objects\Update|null
      */
     protected function processCommand(Update $update)
     {
         $message = $update->getMessage();
-        $command = '/' . AbstractCommand::COMMAND_ERROR;
+        $command = null;
+        $result = null;
 
         if ($message !== null) {
-//            if ($message->has('text')) {
-//                $command = $message->getText();
-//            } elseif ($message->has('location')) {
-//                $command = '/' . AbstractCommand::COMMAND_LOCATION;
-//            }
+            if ($message->has('text')) {
+                $command = $message->getText();
+            }
+////            } elseif ($message->has('location')) {
+////                $command = '/' . AbstractCommand::COMMAND_LOCATION;
+////            }
         }
 
-        return $this->getCommandBus()->handler($command, $update);
+        if ($command !== null) {
+            $result = $this->getCommandBus()->handler($command, $update);
+        }
+
+        return $result;
     }
 
     /**

@@ -138,12 +138,8 @@ class CommandBus
      */
     public function handler($message, Update $update)
     {
-        $message = trim($message);
-        if (trim($message) === '') {
-            throw new \InvalidArgumentException('Message is empty, Cannot parse for command');
-        }
-        $message = strtolower($message);
-        $message = ltrim($message, '/');
+        $message = $this->prepareCommandMessage($message);
+        $command = null;
         $arguments = [];
         if (isset($this->getCommands()[$message])) {
             $command = $message;
@@ -153,11 +149,12 @@ class CommandBus
 //            if (!empty($match)) {
 //                $command = $match[1];
 //                $arguments = $match[3];
-//            } else {
-            $command = AbstractCommand::COMMAND_ERROR;
 //            }
         }
 
+        if (!isset($command)) {
+            $command = AbstractCommand::COMMAND_ERROR;
+        }
         $this->telegram->lastExecuteStatus = $this->execute($command, $arguments, $update);
         return $update;
     }
@@ -193,6 +190,27 @@ class CommandBus
         $keyboard = [];
 
         return $this->commands[$name]->make($this->telegram, $arguments, $message, $keyboard);
+    }
+
+    /**
+     * @param string $message
+     * @return string
+     */
+    protected function prepareCommandMessage($message)
+    {
+        if (!isset($message)) {
+            $message = AbstractCommand::COMMAND_ERROR;
+        }
+
+        $message = trim($message);
+        if ($message === '') {
+            throw new \InvalidArgumentException('Message is empty, Cannot parse for command');
+        }
+
+        $message = strtolower($message);
+        $message = ltrim($message, '/');
+
+        return $message;
     }
 
     /**
