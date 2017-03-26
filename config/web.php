@@ -53,7 +53,8 @@ $config = [
         'bot' => [
             'class' => 'app\components\telegrambot\Api',
             'accessToken' => $token,
-            'commandPath' => '@app/components/commands'
+            'commandPath' => '@app/components/commands',
+            'keyboardPath' => '@app/components/keyboards'
         ],
         'urlManager' => [
             'enablePrettyUrl' => true,

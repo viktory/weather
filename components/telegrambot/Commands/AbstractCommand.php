@@ -3,8 +3,10 @@
 namespace app\components\telegrambot\Commands;
 
 use app\components\telegrambot\Api;
-use app\components\telegrambot\Exceptions\TelegramSDKException;
+use app\components\telegrambot\Keyboard\AbstractKeyboard;
 use app\components\telegrambot\Objects\Update;
+use app\components\telegrambot\Resources\ResourceInterface;
+use app\components\telegrambot\Resources\ResourceTrait;
 
 /**
  * Class AbstractCommand
@@ -24,14 +26,13 @@ use app\components\telegrambot\Objects\Update;
  * @method mixed replyWithLocation($use_sendLocation_parameters) Reply Chat with a Location. You can use all the sendLocation() parameters except chat_id.
  * @method mixed replyWithChatAction($use_sendChatAction_parameters) Reply Chat with a Chat Action. You can use all the sendChatAction() parameters except chat_id.
  */
-abstract class AbstractCommand implements CommandInterface
+abstract class AbstractCommand implements ResourceInterface, CommandInterface
 {
     const COMMAND = 'Command';
     //todo move constants to somewhere else. avoid to create command as '/'.constant
     const COMMAND_ERROR = 'error';
-//    const COMMAND_START = 'start';
-//    const COMMAND_HELP = 'help';
-//    const COMMAND_LOCATION = 'saveLocation';
+
+    use ResourceTrait;
 
     /**
      * The name of the Telegram command.
@@ -49,41 +50,18 @@ abstract class AbstractCommand implements CommandInterface
     /** @var string Arguments passed to the command. */
     protected $arguments;
 
+    /** @var AbstractKeyboard */
+    protected $keyboard;
+
     /** @var Update Holds an Update object. */
     protected $update;
 
     /**
-     * AbstractCommand constructor.
-     * @throws \app\components\telegrambot\Exceptions\TelegramSDKException
-     */
-    public function __construct()
-    {
-        if (!isset($this->name)) {
-            $reflect = new \ReflectionClass($this);
-            $className = $reflect->getShortName();
-            if (substr($className, -7) !== self::COMMAND) {
-                throw new TelegramSDKException(get_class($this) . ' must have a $name');
-            }
-            $this->name = lcfirst(rtrim($className, self::COMMAND));
-        }
-    }
-
-    /**
-     * Get Command Name.
      * @return string
      */
-    public function getName()
+    public function getType()
     {
-        return $this->name;
-    }
-
-    /**
-     * Get Command Name in lower case
-     * @return string
-     */
-    public function getLowerName()
-    {
-        return strtolower($this->name);
+        return self::COMMAND;
     }
 
     /**
@@ -173,11 +151,12 @@ abstract class AbstractCommand implements CommandInterface
     /**
      * {@inheritdoc}
      */
-    public function make(Api $telegram, array $arguments, Update $update, array $keyboard = [])
+    public function make(Api $telegram, array $arguments, Update $update, AbstractKeyboard $keyboard)
     {
         $this->telegram = $telegram;
         $this->arguments = $arguments;
         $this->update = $update;
+        $this->keyboard = $keyboard;
 
         if ($this->beforeHandle($arguments)) {
             $result = $this->handle($arguments);
@@ -227,9 +206,11 @@ abstract class AbstractCommand implements CommandInterface
                 return 'Method Not Found';
             }
 
-            $chat_id = $this->update->getChatId();
-            $params = array_merge(compact('chat_id'), $arguments[0], []);
-
+            $chatId = $this->update->getChatId();
+            $params = array_merge([
+                'chat_id' => $chatId,
+                'reply_markup' => $this->keyboard->get()
+            ], $arguments[0], []);
             return call_user_func_array([$this->telegram, $methodName], [$params]);
         }
 

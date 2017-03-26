@@ -4,6 +4,7 @@ namespace app\components\telegrambot\Commands;
 
 use app\components\telegrambot\Api;
 use app\components\telegrambot\Exceptions\TelegramSDKException;
+use app\components\telegrambot\Keyboard\Keyboard;
 use app\components\telegrambot\Objects\Update;
 
 /**
@@ -66,20 +67,7 @@ class CommandBus
     public function addCommand($command)
     {
         if (!is_object($command)) {
-            if (!class_exists($command)) {
-                throw new TelegramSDKException(
-                    sprintf(
-                        'Command class "%s" not found! Please make sure the class exists.',
-                        $command
-                    )
-                );
-            }
-
-            if ($this->telegram->hasContainer()) {
-                $command = $this->buildDependencyInjectedCommand($command);
-            } else {
-                $command = new $command();
-            }
+            $command = $this->telegram->createResourceByClassName($command);
         }
 
         if ($command instanceof CommandInterface) {
@@ -186,8 +174,7 @@ class CommandBus
         if (!array_key_exists($name, $this->commands)) {
             $name = AbstractCommand::COMMAND_ERROR;
         }
-//        $keyboard = $this->telegram->getCurrentKeyboard($name);
-        $keyboard = [];
+        $keyboard = Keyboard::get($this->telegram->getKeyboards(), $name);
 
         return $this->commands[$name]->make($this->telegram, $arguments, $message, $keyboard);
     }
@@ -211,38 +198,5 @@ class CommandBus
         $message = ltrim($message, '/');
 
         return $message;
-    }
-
-    /**
-     * @param $commandClass
-     * @return object
-     */
-    private function buildDependencyInjectedCommand($commandClass)
-    {
-        /** check if the command has a constructor */
-        if (!method_exists($commandClass, '__construct')) {
-            return new $commandClass();
-        }
-
-        /** get constructor params */
-        $constructorReflector = new \ReflectionMethod($commandClass, '__construct');
-        $params = $constructorReflector->getParameters();
-
-        /** if no params are needed proceed with normal instantiation
-        if (empty($params)) {
-            return new $commandClass();
-        }
-
-        /** otherwise fetch each dependency out of the container */
-        $container = $this->telegram->getContainer();
-        $dependencies = [];
-        foreach ($params as $param) {
-            $dependencies[] = $container->make($param->getClass()->name);
-        }
-
-        /** and instantiate the object with dependencies through ReflectionClass */
-        $classReflector = new \ReflectionClass($commandClass);
-
-        return $classReflector->newInstanceArgs($dependencies);
     }
 }

@@ -17,7 +17,9 @@ use app\components\telegrambot\Commands\CommandInterface;
 use app\components\telegrambot\Exceptions\TelegramSDKException;
 use app\components\telegrambot\HttpClients\GuzzleHttpClient;
 use app\components\telegrambot\HttpClients\HttpClientInterface;
+use app\components\telegrambot\Keyboard\KeyboardTrait;
 use app\components\telegrambot\Objects\Update;
+use app\components\telegrambot\Resources\ResourceCreatorTrait;
 use app\models\User;
 use Illuminate\Contracts\Container\Container;
 use yii\base\Component;
@@ -28,7 +30,9 @@ use yii\base\Component;
  */
 class Api extends Component
 {
-    use SenderTrait;
+    use SenderTrait, KeyboardTrait, ResourceCreatorTrait {
+        KeyboardTrait::init as private keyboardInit;
+    }
 
     /** @var null|string|HttpClientInterface (Optional) Custom HTTP Client Handler. */
     public $httpClientHandler = null;
@@ -95,15 +99,11 @@ class Api extends Component
                 throw new \InvalidArgumentException('The HTTP Client Handler must be set to "guzzle", or be an instance of app\components\telegrambot\HttpClients\HttpClientInterface');
             }
         }
-//
-//        if (isset($async)) {
-//            $this->setAsyncRequest($async);
-//        }
-//
+
         $this->client = new TelegramClient($httpClientHandler);
 
         $this->_loadCommands();
-
+        $this->keyboardInit();
         parent::init();
     }
 
@@ -196,6 +196,14 @@ class Api extends Component
     }
 
     /**
+     * @return \app\components\telegrambot\Objects\Update
+     */
+    public function getUpdate()
+    {
+        return $this->_update;
+    }
+
+    /**
      * @return Update
      */
     public function getWebhookUpdates()
@@ -262,13 +270,6 @@ class Api extends Component
      */
     private function _loadCommands()
     {
-        $d = dir(\Yii::getAlias($this->commandPath));
-        $baseNamespace = str_replace(['@', '/'], ['', '\\'], $this->commandPath);
-        while (false !== ($entry = $d->read())) {
-            if ((strpos($entry, 'Command.php') !== false) && (strpos($entry, 'AbstractCommand.php') === false)) {
-                $command = $baseNamespace . '\\' . str_replace(['.php'], '', $entry);
-                $this->addCommand($command);
-            }
-        }
+        $this->_loadResource(AbstractCommand::COMMAND, $this->commandPath, 'addCommand');
     }
 }
