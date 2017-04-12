@@ -171,12 +171,34 @@ class CommandBus
      */
     public function execute($name, array $arguments, Update $message)
     {
+        $this->beforeExecute($name);
+
+        $changeTo = $this->changeCommandManually($name);
+        if (!empty($changeTo)) {
+            $name = $changeTo;
+        }
+
         if (!array_key_exists($name, $this->commands)) {
             $name = AbstractCommand::COMMAND_ERROR;
         }
+
         $keyboard = Keyboard::get($this->telegram->getKeyboards(), $name);
 
-        return $this->commands[$name]->make($this->telegram, $arguments, $message, $keyboard);
+        return $this->commands[$name]->make($arguments, $message, $keyboard);
+    }
+
+    /**
+     * @param $commandName
+     * @return null|string
+     */
+    public function changeCommandManually($commandName)
+    {
+        $changeTo = null;
+        if (!empty($commandName) && !empty($this->commands[$commandName])) {
+            $changeTo = $this->commands[$commandName]->runAnotherCommand();
+        }
+
+        return $changeTo;
     }
 
     /**
@@ -198,5 +220,15 @@ class CommandBus
         $message = ltrim($message, '/');
 
         return $message;
+    }
+
+    /**
+     * @param $commandName
+     */
+    protected function beforeExecute($commandName)
+    {
+        if (array_key_exists($commandName, $this->commands)) {
+            $this->commands[$commandName]->setTelegram($this->telegram);
+        }
     }
 }

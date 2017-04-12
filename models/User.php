@@ -97,4 +97,12 @@ class User extends ActiveRecord
 
         return $user;
     }
+
+    /**
+     * @return bool
+     */
+    public function hasLocation()
+    {
+        return !empty($this->city) || (!empty($this->lat) && !empty($this->lng));
+    }
 }

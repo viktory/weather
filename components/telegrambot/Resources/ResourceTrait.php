@@ -33,7 +33,8 @@ trait ResourceTrait
             if (substr($className, -strlen($type)) !== $type) {
                 throw new TelegramSDKException(get_class($this) . ' must have a $name');
             }
-            $this->name = lcfirst(rtrim($className, $type));
+            $className = preg_replace('/' . $type . '$/', '', $className);
+            $this->name = trim($className);
         }
     }
 

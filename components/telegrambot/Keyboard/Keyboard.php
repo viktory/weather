@@ -28,10 +28,11 @@ class Keyboard
         $commandName = strtolower($commandName);
         foreach ($keyboards as $keyboard) {
             if ($keyboard->isRelatedTo($commandName)) {
+                $keyboard->setLastCommand($commandName);
                 return $keyboard;
             }
         }
 
-        return [];
+        return null;
     }
 }

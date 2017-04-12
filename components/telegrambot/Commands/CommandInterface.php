@@ -2,7 +2,6 @@
 
 namespace app\components\telegrambot\Commands;
 
-use app\components\telegrambot\Api;
 use app\components\telegrambot\Keyboard\AbstractKeyboard;
 use app\components\telegrambot\Objects\Update;
 
@@ -14,13 +13,12 @@ interface CommandInterface
 {
     /**
      * Process Inbound Command.
-     * @param Api $telegram
      * @param array $arguments
      * @param Update $update
      * @param AbstractKeyboard $keyboard
      * @return mixed
      */
-    public function make(Api $telegram, array $arguments, Update $update, AbstractKeyboard $keyboard);
+    public function make(array $arguments, Update $update, AbstractKeyboard $keyboard);
 
     /**
      * Process the command.

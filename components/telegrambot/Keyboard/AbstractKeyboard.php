@@ -22,7 +22,9 @@ abstract class AbstractKeyboard implements ResourceInterface, KeyboardInterface
 {
     const KEYBOARD = 'Keyboard';
 
-    use ResourceTrait;
+    use ResourceTrait {
+        ResourceTrait::__construct as private resourceTraitConstruct;
+    }
 
     /** @var string */
     protected $name;
@@ -35,6 +37,9 @@ abstract class AbstractKeyboard implements ResourceInterface, KeyboardInterface
 
     /** @var bool */
     protected $oneTimeKeyboard = true;
+
+    /** @var string */
+    protected $lastCommand = null;
 
     /**
      * AbstractKeyboard constructor.
@@ -50,6 +55,18 @@ abstract class AbstractKeyboard implements ResourceInterface, KeyboardInterface
                 }
             }
         }
+        $this->resourceTraitConstruct();
+    }
+
+    /**
+     * @param string $command
+     * @return $this
+     */
+    public function setLastCommand($command)
+    {
+        $this->lastCommand = $command;
+
+        return $this;
     }
 
     /**

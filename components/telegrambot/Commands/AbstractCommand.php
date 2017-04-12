@@ -34,6 +34,9 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
 
     use ResourceTrait;
 
+    /**  @var Api Holds the Super Class Instance. */
+    protected static $telegram;
+
     /**
      * The name of the Telegram command.
      * Ex: help - Whenever the user sends /help, this would be resolved.
@@ -43,9 +46,6 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
 
     /** @var string The Telegram command description. */
     protected $description;
-
-    /**  @var Api Holds the Super Class Instance. */
-    protected $telegram;
 
     /** @var string Arguments passed to the command. */
     protected $arguments;
@@ -111,7 +111,15 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
      */
     public function getTelegram()
     {
-        return $this->telegram;
+        return self::$telegram;
+    }
+
+    /**
+     * @param \app\components\telegrambot\Api $telegram
+     */
+    public function setTelegram(Api $telegram)
+    {
+        self::$telegram = $telegram;
     }
 
     /**
@@ -137,7 +145,7 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
      */
     public function getUserName()
     {
-        return $this->telegram->getUser()->first_name;
+        return self::$telegram->getUser()->first_name;
     }
 
     /**
@@ -151,9 +159,8 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
     /**
      * {@inheritdoc}
      */
-    public function make(Api $telegram, array $arguments, Update $update, AbstractKeyboard $keyboard)
+    public function make(array $arguments, Update $update, AbstractKeyboard $keyboard = null)
     {
-        $this->telegram = $telegram;
         $this->arguments = $arguments;
         $this->update = $update;
         $this->keyboard = $keyboard;
@@ -190,6 +197,14 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
     abstract public function handle(array $arguments);
 
     /**
+     * @return string|null
+     */
+    public function runAnotherCommand()
+    {
+        return null;
+    }
+
+    /**
      * Magic Method to handle all ReplyWith Methods.
      * @param $method
      * @param $arguments
@@ -202,16 +217,20 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
             $reply_name = substr($method, 9);
             $methodName = 'send' . $reply_name;
 
-            if (!method_exists($this->telegram, $methodName)) {
+            if (!method_exists(self::$telegram, $methodName)) {
                 return 'Method Not Found';
             }
 
             $chatId = $this->update->getChatId();
-            $params = array_merge([
-                'chat_id' => $chatId,
-                'reply_markup' => $this->keyboard->get()
-            ], $arguments[0], []);
-            return call_user_func_array([$this->telegram, $methodName], [$params]);
+            $params = [
+                'chat_id' => $chatId
+            ];
+            if (isset($this->keyboard) && ($this->keyboard instanceof AbstractKeyboard)) {
+                $params['reply_markup'] = $this->keyboard->get();
+            }
+            $params = array_merge($params, $arguments[0], []);
+
+            return call_user_func_array([self::$telegram, $methodName], [$params]);
         }
 
         return 'Method Not Found';

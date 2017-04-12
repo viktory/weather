@@ -1,9 +1,9 @@
 <?php
 
 /**
- * MainKeyboard.php
+ * LocationKeyboard.php
  * Created for weather
- * 2017-03-25
+ * 2017-03-27
  *
  * @author: Viktoriia Lysenko <lysenkoviktory@gmail.com>
  * @copyright 2017 Viktoriia Lysenko
@@ -14,12 +14,12 @@ namespace app\components\keyboards;
 use app\components\telegrambot\Keyboard\AbstractKeyboard;
 
 /**
- * Class MainKeyboard
+ * Class LocationKeyboard
  * @package app\components\keyboards
  */
-class MainKeyboard extends AbstractKeyboard
+class LocationKeyboard extends AbstractKeyboard
 {
-    protected $commands = ['start'];
+    protected $commands = ['location'];
 
     public function getButtons()
     {
