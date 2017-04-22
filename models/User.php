@@ -19,6 +19,7 @@ use app\components\telegrambot\Objects\User as TelegramUser;
  * @property double $lat
  * @property double $lng
  * @property integer $created
+ * @property string $command
  */
 class User extends ActiveRecord
 {

@@ -19,14 +19,14 @@ class TodayCommand extends AbstractCommand
     /** @var string Command Description */
     protected $description = 'Today forecast';
 
-    /**
-     * {@inheritdoc}
-     */
-    public function handle(array $arguments)
-    {
-        $this->replyWithMessage([
-            'text' => $this->getText()
-        ]);
-        return true;
-    }
+//    /**
+//     * {@inheritdoc}
+//     */
+//    public function handle(array $arguments)
+//    {
+//        $this->replyWithMessage([
+//            'text' => $this->getText()
+//        ]);
+//        return true;
+//    }
 }

@@ -1,9 +1,9 @@
 <?php
 /**
- * ErrorCommand.php
+ * UnitsCommand.php
  *
  * @project weather_bot
- * @since 29.04.2016
+ * @since 22.03.2017
  * @author Viktory Lysenko <lysenkoviktory@gmail.com>
  * @copyright Copyright (c) 2016, Viktory Lysenko
  */
@@ -12,18 +12,10 @@ namespace app\components\commands;
 
 use app\components\telegrambot\Commands\AbstractCommand;
 
-class StartCommand extends AbstractCommand
+class UnitsCommand extends AbstractCommand
 {
     /** @var string Command Description */
-    protected $description = 'Start command';
-
-    public function getText()
-    {
-        return <<<TEXT
-Hi {$this->getUserName()}!
-I'm the Weather bot and I'm here to help you to dress for the weather.
-TEXT;
-    }
+    protected $description = 'Units';
 
 //    /**
 //     * {@inheritdoc}

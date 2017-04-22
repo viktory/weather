@@ -239,14 +239,13 @@ class Api extends Component
         if ($message !== null) {
             if ($message->has('text')) {
                 $command = $message->getText();
+            } elseif ($message->has('location')) {
+                $command = AbstractCommand::COMMAND_SAVE_LOCATION;
             }
-////            } elseif ($message->has('location')) {
-////                $command = '/' . AbstractCommand::COMMAND_LOCATION;
-////            }
         }
 
         if ($command !== null) {
-            $result = $this->getCommandBus()->handler($command, $update);
+            $result = $this->getCommandBus()->commandHandler($command, $update);
         }
 
         return $result;

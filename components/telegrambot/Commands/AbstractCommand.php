@@ -31,6 +31,7 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
     const COMMAND = 'Command';
     //todo move constants to somewhere else. avoid to create command as '/'.constant
     const COMMAND_ERROR = 'error';
+    const COMMAND_SAVE_LOCATION = 'saveLocation';
 
     use ResourceTrait;
 
@@ -179,6 +180,22 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
      */
     protected function beforeHandle(array $arguments)
     {
+        $telegram = $this->getTelegram();
+        $user = $telegram->getUser();
+        $user->command = $this->getLowerName();
+        $user->save();
+
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function handle(array $arguments)
+    {
+        $this->replyWithMessage([
+            'text' => $this->getText()
+        ]);
         return true;
     }
 
@@ -190,11 +207,6 @@ abstract class AbstractCommand implements ResourceInterface, CommandInterface
     {
         return $result;
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    abstract public function handle(array $arguments);
 
     /**
      * @return string|null

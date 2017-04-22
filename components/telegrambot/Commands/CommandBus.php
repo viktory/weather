@@ -5,6 +5,7 @@ namespace app\components\telegrambot\Commands;
 use app\components\telegrambot\Api;
 use app\components\telegrambot\Exceptions\TelegramSDKException;
 use app\components\telegrambot\Keyboard\Keyboard;
+use app\components\telegrambot\Objects\Location;
 use app\components\telegrambot\Objects\Update;
 
 /**
@@ -124,11 +125,12 @@ class CommandBus
      * @param \app\components\telegrambot\Objects\Update $update
      * @return \app\components\telegrambot\Objects\Update
      */
-    public function handler($message, Update $update)
+    public function commandHandler($message, Update $update)
     {
         $message = $this->prepareCommandMessage($message);
         $command = null;
         $arguments = [];
+
         if (isset($this->getCommands()[$message])) {
             $command = $message;
         } else {
@@ -143,9 +145,24 @@ class CommandBus
         if (!isset($command)) {
             $command = AbstractCommand::COMMAND_ERROR;
         }
+
         $this->telegram->lastExecuteStatus = $this->execute($command, $arguments, $update);
         return $update;
     }
+
+    /**
+     * @param \app\components\telegrambot\Objects\Location $location
+     * @param \app\components\telegrambot\Objects\Update $update
+     */
+//    public function locationHandler(Location $location, Update $update)
+//    {
+//        $user = $this->telegram->getUser();
+//        if ($user->command === AbstractCommand::COMMAND_LOCATION) {
+//            $user->lat = $location->getLatitude();
+//            $user->lng = $location->getLongitude();
+//            $user->save();
+//        }
+//    }
 
 //    /**
 //     * Parse a Command for a Match.
@@ -173,7 +190,7 @@ class CommandBus
     {
         $this->beforeExecute($name);
 
-        $changeTo = $this->changeCommandManually($name);
+        $changeTo = strtolower($this->changeCommandManually($name));
         if (!empty($changeTo)) {
             $name = $changeTo;
         }
