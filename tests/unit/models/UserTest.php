@@ -1,42 +1,79 @@
 <?php
 namespace tests\models;
+
 use app\models\User;
+use app\components\telegrambot\Objects\User as TelegramUser;
+use Codeception\Specify;
+use Codeception\Util\Stub;
+use yii\db\Exception;
 
 class UserTest extends \Codeception\Test\Unit
 {
-    public function testFindUserById()
-    {
-        expect_that($user = User::findIdentity(100));
-        expect($user->username)->equals('admin');
+    use Specify;
 
-        expect_not(User::findIdentity(999));
+    /** @var \UnitTester */
+    public $tester;
+
+    /** @var TelegramUser */
+    public $from = null;
+
+    /** @inheritdoc */
+    protected function setUp()
+    {
+        $data = (object)[
+            'id' => 123456,
+            'first_name' => 'Test',
+            'last_name' => 'User',
+        ];
+        $this->from = Stub::construct(TelegramUser::class, [$data]);
+
+        return parent::setUp();
     }
 
-    public function testFindUserByAccessToken()
+    public function testGetUser()
     {
-        expect_that($user = User::findIdentityByAccessToken('100-token'));
-        expect($user->username)->equals('admin');
+        $this->specify('sender is specified', function () {
+            $this->tester->expectException(
+                new \InvalidArgumentException('Sender is empty'),
+                function () { User::getUser(Stub::construct(TelegramUser::class, [(object)[]])); }
+            );
 
-        expect_not(User::findIdentityByAccessToken('non-existing'));        
+            $this->tester->expectException(
+                new Exception('Can not create new user with user_id=\'123456\' and first_name=\'\' ({"first_name":["First Name cannot be blank."]})'),
+                function () { User::getUser(Stub::construct(TelegramUser::class, [(object)['id' => 123456]])); }
+            );
+        });
+
+        $this->specify('save new user', function () {
+            $this->tester->dontSeeRecord(User::class, ['user_id' => $this->from->getId()]);
+            $user = User::getUser($this->from);
+            $this->tester->seeRecord(User::class, ['user_id' => $this->from->getId()]);
+        });
     }
 
-    public function testFindUserByUsername()
+    public function testHasLocation()
     {
-        expect_that($user = User::findByUsername('admin'));
-        expect_not(User::findByUsername('not-admin'));
+        $this->specify('user has not location', function () {
+            $user = new User();
+            $this->assertFalse($user->hasLocation());
+
+            $user->lat = 123;
+            $this->assertFalse($user->hasLocation());
+
+            $user->lat = null;
+            $user->lng = 123;
+            $this->assertFalse($user->hasLocation());
+        });
+
+        $this->specify('user has location', function () {
+            $user = new User();
+            $user->city = 'User\'s city';
+            $this->assertTrue($user->hasLocation());
+
+            $user->city = null;
+            $user->lat = 123;
+            $user->lng = 321;
+            $this->assertTrue($user->hasLocation());
+        });
     }
-
-    /**
-     * @depends testFindUserByUsername
-     */
-    public function testValidateUser($user)
-    {
-        $user = User::findByUsername('admin');
-        expect_that($user->validateAuthKey('test100key'));
-        expect_not($user->validateAuthKey('test102key'));
-
-        expect_that($user->validatePassword('admin'));
-        expect_not($user->validatePassword('123456'));        
-    }
-
 }

@@ -76,7 +76,7 @@ class User extends ActiveRecord
      */
     public static function getUser(TelegramUser $from)
     {
-        if (empty($from)) {
+        if (empty($from) || empty($from->getId())) {
             throw new \InvalidArgumentException('Sender is empty');
         }
         $user = self::findOne(['user_id' => $from->getId()]);
@@ -90,7 +90,7 @@ class User extends ActiveRecord
                 $user->save();
             } else {
                 $errorMessages = json_encode($user->getErrors());
-                $message = "Can not create new user with user_id={$from->getId()} and first_name={$from->getFirstName()} ({$errorMessages})";
+                $message = "Can not create new user with user_id='{$from->getId()}' and first_name='{$from->getFirstName()}' ({$errorMessages})";
                 throw new Exception($message);
             }
         }
