@@ -1,16 +1,14 @@
 <?php
-namespace tests\models;
+namespace tests\unit\models;
 
 use app\models\User;
 use app\components\telegrambot\Objects\User as TelegramUser;
-use Codeception\Specify;
 use Codeception\Util\Stub;
+use tests\unit\AbstractTest;
 use yii\db\Exception;
 
-class UserTest extends \Codeception\Test\Unit
+class UserTest extends AbstractTest
 {
-    use Specify;
-
     /** @var \UnitTester */
     public $tester;
 
@@ -35,12 +33,17 @@ class UserTest extends \Codeception\Test\Unit
         $this->specify('sender is specified', function () {
             $this->tester->expectException(
                 new \InvalidArgumentException('Sender is empty'),
-                function () { User::getUser(Stub::construct(TelegramUser::class, [(object)[]])); }
+                function () {
+                    User::getUser(Stub::construct(TelegramUser::class, [(object)[]]));
+                }
             );
 
             $this->tester->expectException(
-                new Exception('Can not create new user with user_id=\'123456\' and first_name=\'\' ({"first_name":["First Name cannot be blank."]})'),
-                function () { User::getUser(Stub::construct(TelegramUser::class, [(object)['id' => 123456]])); }
+                new Exception('Can not create new user with user_id=\'123456\' and first_name=\'\' ' .
+                    '({"first_name":["First Name cannot be blank."]})'),
+                function () {
+                    User::getUser(Stub::construct(TelegramUser::class, [(object)['id' => 123456]]));
+                }
             );
         });
 
